@@ -1,5 +1,7 @@
+import 'dart:convert';
+
+import 'package:first_app/api/api.service.dart';
 import 'package:flutter/material.dart';
-import '../dummyimg.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -9,47 +11,31 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  late Map<String, dynamic> mapResponse;
+  late List<dynamic> dataResponse;
+  TextEditingController _textController = TextEditingController();
+  String texts = '';
 
-  List<DummyImg> quotes = [
-    DummyImg(
-        desc: "Lady with a red umbrella",
-        img: "https://googleflutter.com/sample_image.jpg"),
-    DummyImg(
-        desc: "Some kind of bird",
-        img:
-            "http://books.google.com/books/content?id=gsK9jwEACAAJ&printsec=frontcover&img=1&zoom=5&source=gbs_api"),
-    DummyImg(
-        desc: "The attack of dragons",
-        img: "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg"),
-    DummyImg(
-        desc: "Beautiful scenery",
-        img: "https://googleflutter.com/sample_image.jpg"),
-    DummyImg(
-        desc: "Lady with a red umbrella",
-        img: "https://googleflutter.com/sample_image.jpg"),
-    DummyImg(
-        desc: "Some kind of bird",
-        img:
-            "http://books.google.com/books/content?id=gsK9jwEACAAJ&printsec=frontcover&img=1&zoom=5&source=gbs_api"),
-    DummyImg(
-        desc: "The attack of dragons",
-        img: "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg"),
-    DummyImg(
-        desc: "Beautiful scenery",
-        img: "https://googleflutter.com/sample_image.jpg"),
-    DummyImg(
-        desc: "The attack of dragons",
-        img: "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg"),
-    DummyImg(
-        desc: "Beautiful scenery",
-        img: "https://googleflutter.com/sample_image.jpg"),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    getApi('');
+  }
+
+  getApi(text) {
+     ApiService().fetchAlbum(text).then((value) => {
+       setState(() {
+         mapResponse = jsonDecode(value) ;
+         dataResponse = mapResponse['photos']['photo'];
+       })
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text('Flickr'),
+          title: Text('Flickr'),
         ),
         drawer: Drawer(
           child: ListView(
@@ -79,9 +65,16 @@ class _HomeState extends State<Home> {
         ),
         body: Column(
             children: [
-               const Padding(
+              Padding(
                 padding: EdgeInsets.symmetric(vertical: 12.0),
                 child: TextField(
+                  controller: _textController,
+                  onChanged: (text){
+                    setState(() {
+                      texts = text;
+                      getApi(texts);
+                    });
+                  },
                   decoration: InputDecoration(
                     border: OutlineInputBorder(),
                     labelText: 'Search Image',
@@ -91,28 +84,30 @@ class _HomeState extends State<Home> {
               const SizedBox(
                 height: 10,
               ),
-              Expanded(
-                child: GridView.builder(
-                  itemCount: quotes.length,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 5.0,
-                      mainAxisSpacing: 5.0
-                  ),
-                  itemBuilder: (BuildContext context, int index){
-                    return Column(
-                      children: [
-                        Image.network(
-                          quotes[index].img,
-                          width: 150,
-                          height: 150,
-                        ),
-                        Text(quotes[index].desc)
-                      ],
-                    );
-                  },
-                ),
-              )
+              FutureBuilder<String>(
+                future: ApiService().fetchAlbum('car'), // async work
+                builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+                  switch (snapshot.connectionState) {
+                    case ConnectionState.waiting: return Text('Loading....');
+                    default:
+                      if (snapshot.hasError)
+                        return Text('Error: ${snapshot.error}');
+                      else if(snapshot.hasData){
+                        return Flexible(child: GridView.count(
+                            crossAxisCount: 2,
+                            children: List.generate(dataResponse.length, (index) {
+                              var Url = 'https://live.staticflickr.com/${dataResponse[index]['server']}/${dataResponse[index]['id']}_${dataResponse[index]['secret']}_m.jpg';
+                              return Padding(padding: EdgeInsetsDirectional.all(4),
+                              child: Image.network(Url));
+                            }
+                            )
+                        )  );
+                      }else{
+                        return Text('Expection error');
+                      }
+                  }
+                },
+              ),
             ],
           ),
         );
