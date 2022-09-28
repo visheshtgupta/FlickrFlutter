@@ -1,5 +1,7 @@
+import 'dart:convert';
+
+import 'package:first_app/api/api.service.dart';
 import 'package:flutter/material.dart';
-import '../dummyimg.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -9,112 +11,131 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  late Map<String, dynamic> mapResponse;
+  late List<dynamic> dataResponse;
+  TextEditingController _textController = TextEditingController();
+  String texts = '';
+  int loadedPages = 1;
+  bool loader = false;
+  ScrollController _scrollController =
+      ScrollController(initialScrollOffset: 5.0);
 
-  List<DummyImg> quotes = [
-    DummyImg(
-        desc: "Lady with a red umbrella",
-        img: "https://googleflutter.com/sample_image.jpg"),
-    DummyImg(
-        desc: "Some kind of bird",
-        img:
-            "http://books.google.com/books/content?id=gsK9jwEACAAJ&printsec=frontcover&img=1&zoom=5&source=gbs_api"),
-    DummyImg(
-        desc: "The attack of dragons",
-        img: "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg"),
-    DummyImg(
-        desc: "Beautiful scenery",
-        img: "https://googleflutter.com/sample_image.jpg"),
-    DummyImg(
-        desc: "Lady with a red umbrella",
-        img: "https://googleflutter.com/sample_image.jpg"),
-    DummyImg(
-        desc: "Some kind of bird",
-        img:
-            "http://books.google.com/books/content?id=gsK9jwEACAAJ&printsec=frontcover&img=1&zoom=5&source=gbs_api"),
-    DummyImg(
-        desc: "The attack of dragons",
-        img: "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg"),
-    DummyImg(
-        desc: "Beautiful scenery",
-        img: "https://googleflutter.com/sample_image.jpg"),
-    DummyImg(
-        desc: "The attack of dragons",
-        img: "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg"),
-    DummyImg(
-        desc: "Beautiful scenery",
-        img: "https://googleflutter.com/sample_image.jpg"),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_scrollListener);
+    dataResponse = [];
+  }
+
+  getApi(text, loadMore, loadedPages) {
+    setState(() {
+      loader = !loader;
+    });
+    ApiService().fetchAlbum(text, loadMore, loadedPages).then((value) => {
+          setState(() {
+            mapResponse = jsonDecode(value);
+            if (loadMore) {
+              dataResponse = dataResponse + mapResponse['photos']['photo'];
+              loadedPages++;
+            } else {
+              dataResponse = mapResponse['photos']['photo'];
+            }
+            loader = !loader;
+          })
+        });
+  }
+
+  _scrollListener() {
+    if (_scrollController.offset >=
+            _scrollController.position.maxScrollExtent &&
+        !_scrollController.position.outOfRange) {
+      getApi(texts, true, loadedPages);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: const Text('Flickr'),
+      appBar: AppBar(
+        title: Text('Flickr'),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          children: const [
+            UserAccountsDrawerHeader(
+              accountName: Text('Vishesht'),
+              accountEmail: Text("gvishesht@gmail.com"),
+              currentAccountPicture: CircleAvatar(
+                backgroundImage: NetworkImage(
+                    "https://www.pngall.com/wp-content/uploads/5/User-Profile-PNG-Free-Image.png"),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.person),
+              title: Text('Account'),
+              subtitle: Text("Personal"),
+              trailing: Icon(Icons.edit),
+            ),
+            ListTile(
+              leading: Icon(Icons.email),
+              title: Text('Email'),
+              subtitle: Text("gvishesht@gmail.com"),
+              trailing: Icon(Icons.send),
+            ),
+          ],
         ),
-        drawer: Drawer(
-          child: ListView(
-            children: const [
-              UserAccountsDrawerHeader(
-                accountName: Text('Vishesht'),
-                accountEmail: Text("gvishesht@gmail.com"),
-                currentAccountPicture: CircleAvatar(
-                  backgroundImage: NetworkImage(
-                      "https://www.pngall.com/wp-content/uploads/5/User-Profile-PNG-Free-Image.png"),
-                ),
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.only(top: 12.0),
+            child: TextField(
+              controller: _textController,
+              onChanged: (text) {
+                setState(() {
+                  texts = text;
+                  getApi(texts, false, loadedPages);
+                });
+              },
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Search Image',
               ),
-              ListTile(
-                leading: Icon(Icons.person),
-                title: Text('Account'),
-                subtitle: Text("Personal"),
-                trailing: Icon(Icons.edit),
-              ),
-              ListTile(
-                leading: Icon(Icons.email),
-                title: Text('Email'),
-                subtitle: Text("gvishesht@gmail.com"),
-                trailing: Icon(Icons.send),
-              ),
-            ],
+            ),
           ),
-        ),
-        body: Column(
-            children: [
-               const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12.0),
-                child: TextField(
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Search Image',
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              Expanded(
-                child: GridView.builder(
-                  itemCount: quotes.length,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 5.0,
-                      mainAxisSpacing: 5.0
-                  ),
-                  itemBuilder: (BuildContext context, int index){
-                    return Column(
-                      children: [
-                        Image.network(
-                          quotes[index].img,
-                          width: 150,
-                          height: 150,
-                        ),
-                        Text(quotes[index].desc)
-                      ],
-                    );
-                  },
-                ),
-              )
-            ],
+          const SizedBox(
+            height: 10,
           ),
-        );
+          FutureBuilder<String>(
+            future: ApiService()
+                .fetchAlbum('car', false, loadedPages), // async work
+            builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+              if (snapshot.hasError)
+                return Text('Error: ${snapshot.error}');
+              else if (snapshot.hasData) {
+                return Flexible(
+                    child: GridView.count(
+                        controller: _scrollController,
+                        physics: BouncingScrollPhysics(),
+                        crossAxisCount: 2,
+                        children: List.generate(dataResponse.length, (index) {
+                          var Url =
+                              'https://live.staticflickr.com/${dataResponse[index]['server']}/${dataResponse[index]['id']}_${dataResponse[index]['secret']}_m.jpg';
+                          return Padding(
+                              padding: EdgeInsetsDirectional.all(4),
+                              child: Image.network(Url));
+                        })));
+              } else {
+                return Text(' ');
+              }
+            },
+          ),
+          if (loader)
+            CircularProgressIndicator(
+              strokeWidth: 3.0,
+            )
+        ],
+      ),
+    );
   }
 }
