@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:first_app/api/api.service.dart';
+import 'package:first_app/main.dart';
 import 'package:flutter/material.dart';
 
 class Home extends StatefulWidget {
@@ -28,21 +29,25 @@ class _HomeState extends State<Home> {
   }
 
   getApi(text, loadMore, loadedPages) {
-    setState(() {
-      loader = !loader;
-    });
-    ApiService().fetchAlbum(text, loadMore, loadedPages).then((value) => {
-          setState(() {
-            mapResponse = jsonDecode(value);
-            if (loadMore) {
-              dataResponse = dataResponse + mapResponse['photos']['photo'];
-              loadedPages++;
-            } else {
-              dataResponse = mapResponse['photos']['photo'];
-            }
-            loader = !loader;
-          })
-        });
+    if (texts.isNotEmpty) {
+      setState(() {
+        loader = !loader;
+      });
+      ApiService().fetchAlbum(text, loadMore, loadedPages).then((value) => {
+            setState(() {
+              mapResponse = jsonDecode(value);
+              if (loadMore) {
+                dataResponse = dataResponse + mapResponse['photos']['photo'];
+                loadedPages++;
+              } else {
+                dataResponse = mapResponse['photos']['photo'];
+              }
+              loader = !loader;
+            })
+          });
+    } else {
+      dataResponse = [];
+    }
   }
 
   _scrollListener() {
@@ -56,35 +61,6 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Flickr'),
-      ),
-      drawer: Drawer(
-        child: ListView(
-          children: const [
-            UserAccountsDrawerHeader(
-              accountName: Text('Vishesht'),
-              accountEmail: Text("gvishesht@gmail.com"),
-              currentAccountPicture: CircleAvatar(
-                backgroundImage: NetworkImage(
-                    "https://www.pngall.com/wp-content/uploads/5/User-Profile-PNG-Free-Image.png"),
-              ),
-            ),
-            ListTile(
-              leading: Icon(Icons.person),
-              title: Text('Account'),
-              subtitle: Text("Personal"),
-              trailing: Icon(Icons.edit),
-            ),
-            ListTile(
-              leading: Icon(Icons.email),
-              title: Text('Email'),
-              subtitle: Text("gvishesht@gmail.com"),
-              trailing: Icon(Icons.send),
-            ),
-          ],
-        ),
-      ),
       body: Column(
         children: [
           Padding(
@@ -130,7 +106,7 @@ class _HomeState extends State<Home> {
               }
             },
           ),
-          if (loader)
+          if (loader && texts.isNotEmpty)
             CircularProgressIndicator(
               strokeWidth: 3.0,
             )
