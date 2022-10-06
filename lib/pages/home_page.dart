@@ -1,9 +1,8 @@
-import 'dart:convert';
-
 import 'package:first_app/api/api.service.dart';
-import 'package:first_app/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:first_app/store/imageStore.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -13,49 +12,29 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  late Map<String, dynamic> mapResponse;
-  late List<dynamic> dataResponse;
   TextEditingController _textController = TextEditingController();
   String texts = '';
   int loadedPages = 1;
-  bool loader = false;
   ScrollController _scrollController =
       ScrollController(initialScrollOffset: 5.0);
+
+  final Counter counter = Counter();
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_scrollListener);
-    dataResponse = [];
-  }
-
-  getApi(text, loadMore, loadedPages) {
-    if (texts.isNotEmpty) {
-      setState(() {
-        loader = !loader;
-      });
-      ApiService().fetchAlbum(text, loadMore, loadedPages).then((value) => {
-            setState(() {
-              mapResponse = jsonDecode(value);
-              if (loadMore) {
-                dataResponse = dataResponse + mapResponse['photos']['photo'];
-                loadedPages++;
-              } else {
-                dataResponse = mapResponse['photos']['photo'];
-              }
-              loader = !loader;
-            })
-          });
-    } else {
-      dataResponse = [];
-    }
   }
 
   _scrollListener() {
     if (_scrollController.offset >=
             _scrollController.position.maxScrollExtent &&
         !_scrollController.position.outOfRange) {
-      getApi(texts, true, loadedPages);
+      if (texts.isNotEmpty)
+        counter.getImagesData(texts, true);
+      else {
+        counter.resetImgData();
+      }
     }
   }
 
@@ -71,7 +50,11 @@ class _HomeState extends State<Home> {
               onChanged: (text) {
                 setState(() {
                   texts = text;
-                  getApi(texts, false, loadedPages);
+                  if (texts.isNotEmpty)
+                    counter.getImagesData(texts, false);
+                  else {
+                    counter.resetImgData();
+                  }
                 });
               },
               decoration: InputDecoration(
@@ -84,33 +67,35 @@ class _HomeState extends State<Home> {
             height: 10,
           ),
           FutureBuilder<String>(
-            future: ApiService()
-                .fetchAlbum('car', false, loadedPages), // async work
+            future: ApiService().fetchAlbum('car', false, loadedPages),
             builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
               if (snapshot.hasError)
                 return Text('Error: ${snapshot.error}');
               else if (snapshot.hasData) {
-                return Flexible(
-                    child: GridView.count(
-                        controller: _scrollController,
-                        physics: BouncingScrollPhysics(),
-                        crossAxisCount: 2,
-                        children: List.generate(dataResponse.length, (index) {
-                          var Url =
-                              'https://live.staticflickr.com/${dataResponse[index]['server']}/${dataResponse[index]['id']}_${dataResponse[index]['secret']}_m.jpg';
-                          return Padding(
-                              padding: EdgeInsetsDirectional.all(4),
-                              child: Image.network(Url));
-                        })));
+                return Flexible(child: Observer(builder: (context) {
+                  return GridView.count(
+                      controller: _scrollController,
+                      physics: BouncingScrollPhysics(),
+                      crossAxisCount: 2,
+                      children:
+                          List.generate(counter.dataResponse.length, (index) {
+                        var Url =
+                            'https://live.staticflickr.com/${counter.dataResponse[index]['server']}/${counter.dataResponse[index]['id']}_${counter.dataResponse[index]['secret']}_m.jpg';
+                        return Padding(
+                            padding: EdgeInsetsDirectional.all(4),
+                            child: Image.network(Url));
+                      }));
+                }));
               } else {
                 return Text(' ');
               }
             },
           ),
-          if (loader && texts.isNotEmpty)
-            CircularProgressIndicator(
-              strokeWidth: 3.0,
-            )
+          Observer(builder: (_) {
+            return counter.loader && texts.isNotEmpty
+                ? CircularProgressIndicator()
+                : SizedBox.shrink();
+          })
         ],
       ),
     );

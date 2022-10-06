@@ -25,12 +25,10 @@ class MyDrawer extends StatelessWidget {
             trailing: Icon(Icons.edit),
           ),
           ListTile(
-              leading: Icon(Icons.email),
-              title: Text('Email'),
-              subtitle: Text("gvishesht@gmail.com"),
+              leading: Icon(Icons.settings),
+              title: Text('Settings'),
               trailing: Icon(Icons.send),
-              onTap: () =>
-                  Navigator.pushReplacementNamed(context, '/settings')),
+              onTap: () => Navigator.pushNamed(context, '/settings')),
         ],
       ),
     );
