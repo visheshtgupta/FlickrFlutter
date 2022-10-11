@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 
 class Profile extends StatelessWidget {
   const Profile({super.key});
@@ -9,7 +7,7 @@ class Profile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profile'),
+        title: const Text('Profile'),
       ),
       body: Column(
         children: [
@@ -20,7 +18,7 @@ class Profile extends StatelessWidget {
             onPressed: () {
               Navigator.pop(context);
             },
-            child: Text('Settings'),
+            child: const Text('Settings'),
           ),
         ],
       ),

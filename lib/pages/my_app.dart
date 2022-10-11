@@ -44,7 +44,7 @@ class _MyAppState extends State<MyApp> {
       ],
       home: Scaffold(
         appBar: AppBar(
-          title: Text('Flickr'),
+          title: const Text('Flickr'),
           actions: [
             IconButton(
               icon: Icon(
@@ -60,8 +60,8 @@ class _MyAppState extends State<MyApp> {
             ),
           ],
         ),
-        drawer: MyDrawer(),
-        body: Home(),
+        drawer: const MyDrawer(),
+        body: const Home(),
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:first_app/store/imageStore.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -12,10 +13,10 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  TextEditingController _textController = TextEditingController();
+  final TextEditingController _textController = TextEditingController();
   String texts = '';
   int loadedPages = 1;
-  ScrollController _scrollController =
+  final ScrollController _scrollController =
       ScrollController(initialScrollOffset: 5.0);
 
   final Counter counter = Counter();
@@ -24,18 +25,29 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     _scrollController.addListener(_scrollListener);
+    // printData();
   }
+
+  // printData() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final String? action = prefs.getString('imageData');
+  //   print(action);
+  // }
 
   _scrollListener() {
     if (_scrollController.offset >=
             _scrollController.position.maxScrollExtent &&
         !_scrollController.position.outOfRange) {
-      if (texts.isNotEmpty)
+      if (texts.isNotEmpty) {
         counter.getImagesData(texts, true);
-      else {
+      } else {
         counter.resetImgData();
       }
     }
+  }
+
+  imageUrl(base, index) {
+    return 'https://live.staticflickr.com/${base[index]['server']}/${base[index]['id']}_${base[index]['secret']}_m.jpg';
   }
 
   @override
@@ -44,21 +56,21 @@ class _HomeState extends State<Home> {
       body: Column(
         children: [
           Padding(
-            padding: EdgeInsets.only(top: 12.0),
+            padding: const EdgeInsets.only(top: 12.0),
             child: TextField(
               controller: _textController,
               onChanged: (text) {
                 setState(() {
                   texts = text;
-                  if (texts.isNotEmpty)
+                  if (texts.isNotEmpty) {
                     counter.getImagesData(texts, false);
-                  else {
+                  } else {
                     counter.resetImgData();
                   }
                 });
               },
               decoration: InputDecoration(
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
                 labelText: AppLocalizations.of(context)!.searchImg,
               ),
             ),
@@ -67,34 +79,33 @@ class _HomeState extends State<Home> {
             height: 10,
           ),
           FutureBuilder<String>(
-            future: ApiService().fetchAlbum('car', false, loadedPages),
+            future: ApiService().fetchAlbum(texts, false, loadedPages),
             builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
-              if (snapshot.hasError)
+              if (snapshot.hasError) {
                 return Text('Error: ${snapshot.error}');
-              else if (snapshot.hasData) {
+              } else if (snapshot.hasData) {
                 return Flexible(child: Observer(builder: (context) {
                   return GridView.count(
                       controller: _scrollController,
-                      physics: BouncingScrollPhysics(),
+                      physics: const BouncingScrollPhysics(),
                       crossAxisCount: 2,
                       children:
                           List.generate(counter.dataResponse.length, (index) {
-                        var Url =
-                            'https://live.staticflickr.com/${counter.dataResponse[index]['server']}/${counter.dataResponse[index]['id']}_${counter.dataResponse[index]['secret']}_m.jpg';
+                        var Url = imageUrl(counter.dataResponse, index);
                         return Padding(
-                            padding: EdgeInsetsDirectional.all(4),
+                            padding: const EdgeInsetsDirectional.all(4),
                             child: Image.network(Url));
                       }));
                 }));
               } else {
-                return Text(' ');
+                return const Text(' ');
               }
             },
           ),
           Observer(builder: (_) {
             return counter.loader && texts.isNotEmpty
-                ? CircularProgressIndicator()
-                : SizedBox.shrink();
+                ? const CircularProgressIndicator()
+                : const SizedBox.shrink();
           })
         ],
       ),
