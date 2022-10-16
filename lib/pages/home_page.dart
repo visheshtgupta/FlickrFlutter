@@ -1,5 +1,7 @@
 import 'package:first_app/api/api.service.dart';
+import 'package:first_app/bloc/internet_bloc/internet_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:first_app/store/imageStore.dart';
@@ -106,7 +108,31 @@ class _HomeState extends State<Home> {
             return counter.loader && texts.isNotEmpty
                 ? const CircularProgressIndicator()
                 : const SizedBox.shrink();
-          })
+          }),
+          Center(
+            child: BlocConsumer<InternetBloc, InternetState>(
+              listener: (context, state) {
+                if (state is InternetGainedState) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('Internet connected'),
+                    backgroundColor: Colors.green,
+                  ));
+                } else if (state is InternetLossState) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Internet not connected!')));
+                }
+              },
+              builder: (context, state) {
+                if (state is InternetGainedState) {
+                  return Text('Internet connected');
+                } else if (state is InternetLossState) {
+                  return Text('Internet not connnected');
+                } else {
+                  return Text('Loading...');
+                }
+              },
+            ),
+          )
         ],
       ),
     );
