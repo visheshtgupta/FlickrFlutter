@@ -1,3 +1,4 @@
+import 'package:flickr_image/cubit/internet_cubit/internet_cubit.dart';
 import 'package:flickr_image/routes/routes.dart';
 import 'package:flickr_image/screens/Home/homeScreen.dart';
 import 'package:flickr_image/cubit/theme/theme_cubit.dart';
@@ -16,8 +17,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => ThemeCubit(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => ThemeCubit(),
+        ),
+        BlocProvider(
+          create: (context) => InternetCubit(),
+        ),
+      ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, themeMode) {
           return MaterialApp(

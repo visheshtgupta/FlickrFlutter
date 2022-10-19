@@ -1,7 +1,9 @@
 import 'package:flickr_image/api/api.service.dart';
 import 'package:flickr_image/common/debouncer.dart';
+import 'package:flickr_image/cubit/internet_cubit/internet_cubit.dart';
 import 'package:flickr_image/store/imageStore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import '../../api/api.config.dart';
@@ -43,7 +45,7 @@ class _SearchImageState extends State<SearchImage> {
   }
 
   imageUrl(base, index) {
-    return '${IMAGE_BASE_URL}/${base[index]['server']}/${base[index]['id']}_${base[index]['secret']}_m.jpg';
+    return '$IMAGE_BASE_URL/${base[index]['server']}/${base[index]['id']}_${base[index]['secret']}_m.jpg';
   }
 
   @override
@@ -91,7 +93,7 @@ class _SearchImageState extends State<SearchImage> {
                           List.generate(counter.dataResponse.length, (index) {
                         var Url = imageUrl(counter.dataResponse, index);
                         return Padding(
-                            padding: const EdgeInsetsDirectional.all(4),
+                            padding: const EdgeInsetsDirectional.all(6),
                             child: Image.network(
                               Url,
                               fit: BoxFit.cover,
@@ -108,6 +110,19 @@ class _SearchImageState extends State<SearchImage> {
                 ? const CircularProgressIndicator()
                 : const SizedBox.shrink();
           }),
+          BlocListener<InternetCubit, InternetState>(
+            listener: (context, state) {
+              if (state == InternetState.Gained) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('Internet connected'),
+                  backgroundColor: Colors.green,
+                ));
+              } else if (state == InternetState.Lost) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Internet not connected!')));
+              }
+            },
+          )
         ],
       ),
     );
