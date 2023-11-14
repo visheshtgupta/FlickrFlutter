@@ -109,6 +109,7 @@ class _HomeState extends State<Home> {
                 ? const CircularProgressIndicator()
                 : const SizedBox.shrink();
           }),
+          SizedBox(height: 20),
           Center(
             child: BlocConsumer<InternetBloc, InternetState>(
               listener: (context, state) {

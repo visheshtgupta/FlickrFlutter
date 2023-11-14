@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:first_app/routes/routes.dart' as route;
 
 class MyDrawer extends StatelessWidget {
   const MyDrawer({super.key});
@@ -16,17 +17,18 @@ class MyDrawer extends StatelessWidget {
                 backgroundImage: NetworkImage(
                     'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzHQv_th9wq3ivQ1CVk7UZRxhbPq64oQrg5Q&usqp=CAU'),
               )),
-          const ListTile(
+          ListTile(
             leading: Icon(Icons.person),
             title: Text('Account'),
             subtitle: Text("Personal"),
             trailing: Icon(Icons.edit),
+            onTap: () => Navigator.pushNamed(context, route.ProfilePage),
           ),
           ListTile(
               leading: const Icon(Icons.settings),
               title: const Text('Settings'),
               trailing: const Icon(Icons.send),
-              onTap: () => Navigator.pushNamed(context, '/settings')),
+              onTap: () => Navigator.pushNamed(context, route.SettingsPage)),
         ],
       ),
     );

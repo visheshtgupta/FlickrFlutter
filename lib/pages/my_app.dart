@@ -1,7 +1,6 @@
 import 'package:first_app/bloc/internet_bloc/internet_bloc.dart';
 import 'package:first_app/components/drawer.dart';
-import 'package:first_app/pages/profile.dart';
-import 'package:first_app/pages/settings.dart';
+import 'package:first_app/routes/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:first_app/pages/home_page.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -32,11 +31,8 @@ class _MyAppState extends State<MyApp> {
         debugShowCheckedModeBanner: false,
         theme: isDark ? _darkTheme : _lightTheme,
         title: 'Flutter App',
+        onGenerateRoute: Routes.onGenerateRoute,
         initialRoute: '/',
-        routes: {
-          '/profile': (context) => const Profile(),
-          '/settings': (context) => const Settings()
-        },
         localizationsDelegates: [
           AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,
